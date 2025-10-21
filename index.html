@@ -637,22 +637,10 @@
       <div id="understanding-carousel" class="simple-carousel">
         <div class="understanding-carousel-track">
           <div class="understanding-carousel-item active">
-            <img src="static/images/refine.gif" alt="Animation 1"/>
+            <img src="static/images/refine1.gif" alt="Animation 1"/>
           </div>
           <div class="understanding-carousel-item">
-            <img src="static/images/answer_evolution3.gif" alt="Animation 2"/>
-          </div>
-          <div class="understanding-carousel-item">
-            <img src="static/images/answer_evolution6.gif" alt="Animation 3"/>
-          </div>
-          <div class="understanding-carousel-item">
-            <img src="static/images/answer_evolution7.gif" alt="Animation 4"/>
-          </div>
-          <div class="understanding-carousel-item">
-            <img src="static/images/answer_evolution9.gif" alt="Animation 5"/>
-          </div>
-          <div class="understanding-carousel-item">
-            <img src="static/images/answer_evolution10.gif" alt="Animation 6"/>
+            <img src="static/images/refine2.gif" alt="Animation 2"/>
           </div>
         </div>
       </div>
@@ -669,10 +657,6 @@
       <div class="understanding-nav-dots">
         <span class="understanding-dot active" onclick="jumpToUnderstandingSlide(0)"></span>
         <span class="understanding-dot" onclick="jumpToUnderstandingSlide(1)"></span>
-        <span class="understanding-dot" onclick="jumpToUnderstandingSlide(2)"></span>
-        <span class="understanding-dot" onclick="jumpToUnderstandingSlide(3)"></span>
-        <span class="understanding-dot" onclick="jumpToUnderstandingSlide(4)"></span>
-        <span class="understanding-dot" onclick="jumpToUnderstandingSlide(5)"></span>
       </div>
     </div>
       <style>
@@ -689,12 +673,30 @@
     border-radius: 6px;
     margin: 0 2px;
     font-weight: bold;
+  .token-light-red {
+      background-color: #ffcccc;
+      color: #c0392b;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin: 0 2px;
+      font-weight: bold;
+      display: inline-block;
+  }
+  .token-light-green {
+      background-color: #ccffcc;
+      color: #27ae60;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin: 0 2px;
+      font-weight: bold;
+      display: inline-block;
+  }
   }
     </style>
       <p class="results-description">
-        <strong>Tokens can be iteratively revised—even those previously changed are updated again</strong>
-        (<span class="token-red"><strong>red border</strong></span>), while the <strong>final answer</strong> is marked with a 
-        <span class="token-yellow"><strong>yellow dashed border</strong></span>, illustrating flexible step-by-step reasoning.
+        <strong>32-step generation process:</strong> Our model can simultaneously unmask new tokens and refine previously generated ones.
+        (<span class="token-light-red"><strong>red background</strong></span> indicates intermediate errors in the generation process, while the <strong>refined token</strong> is marked with 
+        <span class="token-light-green"><strong>green background</strong></span>)
       </p>
   </div>
 </section>
@@ -712,7 +714,7 @@
   
   /* Unique styling for understanding carousel */
   #understanding-carousel {
-    width: 80%; /* Carousel width 80% of container */
+    width: 90%; /* Carousel width 80% of container */
     position: relative;
     overflow: hidden;
     margin: 0 auto;
@@ -723,12 +725,12 @@
   .understanding-carousel-track {
     display: flex;
     transition: transform 0.5s ease-in-out;
-    width: 600%; /* 100% × number of slides (6) */
+    width: 200%; /* 100% × number of slides (6) */
   }
   
   .understanding-carousel-item {
-    width: 16.666%; /* 100% ÷ number of slides (6) */
-    flex: 0 0 16.666%;
+    width: 50%; /* 100% ÷ number of slides (6) */
+    flex: 0 0 50%;
     text-align: center;
     opacity: 0.5;
     transition: opacity 0.5s ease;
@@ -906,7 +908,7 @@
         if (!isAnimating) {
           moveUnderstandingCarousel(1); // Move to next slide
         }
-      }, 5000); // Change slide every 5 seconds
+      }, 17000); // Change slide every 5 seconds
     }
     
     // Function to reset autoplay timer
