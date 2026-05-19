@@ -131,6 +131,82 @@
       height: auto;
     }
 
+    .sample-carousel {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--sr-border);
+      background: #ffffff;
+      box-shadow: 0 14px 36px rgba(36, 60, 110, 0.08);
+    }
+
+    .sample-slide {
+      display: none;
+    }
+
+    .sample-slide.active {
+      display: block;
+    }
+
+    .sample-slide img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .sample-nav {
+      position: absolute;
+      top: 50%;
+      z-index: 2;
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      border-radius: 50%;
+      color: #ffffff;
+      background: rgba(32, 36, 45, 0.45);
+      cursor: pointer;
+      transform: translateY(-50%);
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .sample-nav:hover {
+      background: rgba(32, 36, 45, 0.72);
+      transform: translateY(-50%) scale(1.06);
+    }
+
+    .sample-prev {
+      left: 1rem;
+    }
+
+    .sample-next {
+      right: 1rem;
+    }
+
+    .sample-dots {
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+
+    .sample-dot {
+      width: 11px;
+      height: 11px;
+      border: none;
+      border-radius: 50%;
+      background: #cfd8e8;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .sample-dot.active {
+      background: var(--sr-blue);
+      transform: scale(1.18);
+    }
+
     .visual-caption {
       padding: 1rem 1.25rem;
       color: var(--sr-muted);
@@ -472,9 +548,6 @@
 
     <div class="visual-card mt-5">
       <img class="visual-image" src="static/images/sr-real-method.png" alt="SR-ReaL method overview">
-      <div class="visual-caption">
-        Suggested visual: show the upper LOR branch producing <code>&lt;think&gt;...&lt;/think&gt;&lt;answer&gt;...&lt;/answer&gt;</code>, and the lower DTR branch producing <code>&lt;detect&gt;...&lt;/detect&gt;&lt;think&gt;...&lt;/think&gt;&lt;answer&gt;...&lt;/answer&gt;</code>.
-      </div>
     </div>
   </div>
 </section>
@@ -558,43 +631,54 @@
   <div class="container is-max-desktop">
     <div class="section-heading">
       <h2 class="title is-3">Qualitative Examples</h2>
-      <p>These slots are intentionally left as visual placeholders so you can add the best paper examples later.</p>
     </div>
 
-    <div class="columns">
-      <div class="column">
-        <div class="visual-card">
-          <div class="visual-placeholder">
-            <div>
-              <strong>Example 1: Spatial Relation</strong>
-              Replace with <code>static/images/example-relation.png</code>.
-            </div>
-          </div>
-          <div class="visual-caption">
-            Suggested content: compare LOR and DTR on a relation question where both paths reach the correct answer, highlighting complementary reasoning traces.
-          </div>
-        </div>
+    <div class="sample-carousel" aria-label="Qualitative example carousel">
+      <button class="sample-nav sample-prev" type="button" aria-label="Previous example" onclick="moveSampleSlide(-1)">
+        <span class="icon"><i class="fas fa-chevron-left"></i></span>
+      </button>
+      <div class="sample-slide active">
+        <img src="static/images/sample1.png" alt="SR-ReaL qualitative example 1">
       </div>
-      <div class="column">
-        <div class="visual-card">
-          <div class="visual-placeholder">
-            <div>
-              <strong>Example 2: Multi-View Distance</strong>
-              Replace with <code>static/images/example-distance.png</code>.
-            </div>
-          </div>
-          <div class="visual-caption">
-            Suggested content: show DTR aligning objects into one reference frame, localizing 3D centers, and computing distance more accurately than LOR.
-          </div>
-        </div>
+      <div class="sample-slide">
+        <img src="static/images/sample2.png" alt="SR-ReaL qualitative example 2">
       </div>
+      <div class="sample-slide">
+        <img src="static/images/sample3.png" alt="SR-ReaL qualitative example 3">
+      </div>
+      <button class="sample-nav sample-next" type="button" aria-label="Next example" onclick="moveSampleSlide(1)">
+        <span class="icon"><i class="fas fa-chevron-right"></i></span>
+      </button>
     </div>
-
-    <div class="todo-note mt-5">
-      Optional extra visual: add a third example for complex navigation, object manipulation, or layout reasoning from the CA-1M/NuScenes-generated tasks.
+    <div class="sample-dots" aria-label="Qualitative example navigation">
+      <button class="sample-dot active" type="button" aria-label="Show example 1" onclick="showSampleSlide(0)"></button>
+      <button class="sample-dot" type="button" aria-label="Show example 2" onclick="showSampleSlide(1)"></button>
+      <button class="sample-dot" type="button" aria-label="Show example 3" onclick="showSampleSlide(2)"></button>
     </div>
   </div>
 </section>
+
+<script>
+  let sampleSlideIndex = 0;
+
+  function showSampleSlide(index) {
+    const slides = document.querySelectorAll('.sample-slide');
+    const dots = document.querySelectorAll('.sample-dot');
+    if (!slides.length) return;
+
+    sampleSlideIndex = (index + slides.length) % slides.length;
+    slides.forEach((slide, slideIndex) => {
+      slide.classList.toggle('active', slideIndex === sampleSlideIndex);
+    });
+    dots.forEach((dot, dotIndex) => {
+      dot.classList.toggle('active', dotIndex === sampleSlideIndex);
+    });
+  }
+
+  function moveSampleSlide(direction) {
+    showSampleSlide(sampleSlideIndex + direction);
+  }
+</script>
 
 <section class="section hero is-light">
   <div class="container is-max-desktop">
@@ -649,70 +733,3 @@
 </footer>
 </body>
 </html>
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <!-- Meta tags for social media banners, these should be filled in appropriatly as they are your "business card" -->
-  <!-- Replace the content tag with appropriate information -->
-  <meta name="description" content="DESCRIPTION META TAG">
-  <meta property="og:title" content="SOCIAL MEDIA TITLE TAG"/>
-  <meta property="og:description" content="SOCIAL MEDIA DESCRIPTION TAG TAG"/>
-  <meta property="og:url" content="URL OF THE WEBSITE"/>
-  <!-- Path to banner image, should be in the path listed below. Optimal dimenssions are 1200X630-->
-  <meta property="og:image" content="static/image/your_banner_image.png" />
-  <meta property="og:image:width" content="1200"/>
-  <meta property="og:image:height" content="630"/>
-
-
-  <meta name="twitter:title" content="TWITTER BANNER TITLE META TAG">
-  <meta name="twitter:description" content="TWITTER BANNER DESCRIPTION META TAG">
-  <!-- Path to banner image, should be in the path listed below. Optimal dimenssions are 1200X600-->
-  <meta name="twitter:image" content="static/images/your_twitter_banner_image.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <!-- Keywords for your paper to be indexed by-->
-  <meta name="keywords" content="KEYWORDS SHOULD BE PLACED HERE">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-
-  <title>ReDiff</title>
-  <link rel="icon" type="image/x-icon" href="static/images/hku.ico">
-  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
-  rel="stylesheet">
-
-  <link rel="stylesheet" href="static/css/bulma.min.css">
-  <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
-  <link rel="stylesheet" href="static/css/bulma-slider.min.css">
-  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
-  <link rel="stylesheet"
-  href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
-  <link rel="stylesheet" href="static/css/index.css">
-
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="https://documentcloud.adobe.com/view-sdk/main.js"></script>
-  <script defer src="static/js/fontawesome.all.min.js"></script>
-  <script src="static/js/bulma-carousel.min.js"></script>
-  <script src="static/js/bulma-slider.min.js"></script>
-  <script src="static/js/index.js"></script>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-573LRSSRMG"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-573LRSSRMG');
-</script>
-</head>
-<body>
-
-
-
-<!-- Statcounter tracking code -->
-  
-<!-- You can add a tracker to track page visits by creating an account at statcounter.com -->
-
-    <!-- End of Statcounter Code -->
-
-  </body>
-  </html>
