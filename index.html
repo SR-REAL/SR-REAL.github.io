@@ -1,4 +1,663 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SR-ReaL reinforces dual-path spatial reasoning in spatial vision-language models through language-only reasoning and detect-then-reason with explicit 3D grounding.">
+  <meta property="og:title" content="Reinforcing Dual-Path Reasoning in Spatial Vision Language Models">
+  <meta property="og:description" content="SR-ReaL equips spatial VLMs with complementary language-only and geometry-grounded reasoning paths.">
+  <meta property="og:image" content="static/images/sr-real-teaser.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SR-ReaL: Reinforcing Dual-Path Spatial Reasoning">
+  <meta name="twitter:description" content="A unified RL framework for spatial VLM reasoning with LOR and DTR.">
+  <meta name="twitter:image" content="static/images/sr-real-teaser.png">
+  <meta name="keywords" content="spatial reasoning, vision-language models, reinforcement learning, 3D grounding, chain-of-thought, SR-ReaL">
+
+  <title>SR-ReaL | Dual-Path Spatial Reasoning</title>
+  <link rel="icon" type="image/x-icon" href="static/images/hku.ico">
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+
+  <style>
+    :root {
+      --sr-blue: #2f5fbd;
+      --sr-cyan: #11a7b4;
+      --sr-ink: #20242d;
+      --sr-muted: #5c6470;
+      --sr-soft: #f4f8ff;
+      --sr-border: #dfe7f5;
+    }
+
+    body {
+      color: var(--sr-ink);
+      background: #ffffff;
+    }
+
+    .hero.is-sr {
+      background:
+        radial-gradient(circle at 15% 15%, rgba(47, 95, 189, 0.14), transparent 30%),
+        radial-gradient(circle at 85% 10%, rgba(17, 167, 180, 0.14), transparent 28%),
+        linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+    }
+
+    .publication-title {
+      font-family: 'Google Sans', 'Noto Sans', sans-serif;
+      letter-spacing: -0.03em;
+      line-height: 1.08;
+    }
+
+    .publication-authors {
+      color: var(--sr-muted);
+      line-height: 1.65;
+    }
+
+    .author-block {
+      display: inline-block;
+      margin: 0 0.16rem;
+    }
+
+    .venue-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.45rem 0.85rem;
+      margin-bottom: 1.25rem;
+      border-radius: 999px;
+      color: var(--sr-blue);
+      background: rgba(47, 95, 189, 0.08);
+      font-weight: 700;
+    }
+
+    .publication-links {
+      margin-top: 1.2rem;
+    }
+
+    .publication-links .button {
+      margin: 0.25rem;
+    }
+
+    .method-name {
+      font-variant: small-caps;
+      letter-spacing: 0.02em;
+      font-weight: 800;
+    }
+
+    .section-heading {
+      max-width: 760px;
+      margin: 0 auto 2rem;
+      text-align: center;
+    }
+
+    .section-heading p {
+      color: var(--sr-muted);
+      font-size: 1.05rem;
+    }
+
+    .visual-card {
+      border: 1px solid var(--sr-border);
+      border-radius: 18px;
+      background: #ffffff;
+      box-shadow: 0 14px 36px rgba(36, 60, 110, 0.08);
+      overflow: hidden;
+    }
+
+    .visual-placeholder {
+      min-height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background:
+        linear-gradient(135deg, rgba(47, 95, 189, 0.10), rgba(17, 167, 180, 0.10)),
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.45) 0, rgba(255, 255, 255, 0.45) 10px, transparent 10px, transparent 20px);
+      color: var(--sr-muted);
+      text-align: center;
+    }
+
+    .visual-placeholder strong {
+      color: var(--sr-ink);
+      display: block;
+      font-size: 1.25rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .visual-caption {
+      padding: 1rem 1.25rem;
+      color: var(--sr-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .insight-card {
+      height: 100%;
+      padding: 1.4rem;
+      border: 1px solid var(--sr-border);
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 10px 28px rgba(36, 60, 110, 0.06);
+    }
+
+    .insight-card .icon-badge {
+      width: 42px;
+      height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.9rem;
+      border-radius: 12px;
+      color: #ffffff;
+      background: linear-gradient(135deg, var(--sr-blue), var(--sr-cyan));
+    }
+
+    .insight-card p {
+      color: var(--sr-muted);
+      line-height: 1.65;
+    }
+
+    .path-panel {
+      height: 100%;
+      padding: 1.5rem;
+      border-radius: 18px;
+      border: 1px solid var(--sr-border);
+      background: #ffffff;
+    }
+
+    .path-panel.is-lor {
+      border-top: 5px solid var(--sr-blue);
+    }
+
+    .path-panel.is-dtr {
+      border-top: 5px solid var(--sr-cyan);
+    }
+
+    .path-step {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      margin-top: 0.85rem;
+    }
+
+    .path-step span {
+      flex: 0 0 auto;
+      width: 1.65rem;
+      height: 1.65rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      color: #ffffff;
+      background: var(--sr-blue);
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .is-dtr .path-step span {
+      background: var(--sr-cyan);
+    }
+
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    .pipeline-block {
+      position: relative;
+      padding: 1.2rem;
+      border: 1px solid var(--sr-border);
+      border-radius: 16px;
+      background: #ffffff;
+      min-height: 160px;
+    }
+
+    .pipeline-block:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: -0.75rem;
+      width: 0.9rem;
+      height: 0.9rem;
+      border-top: 2px solid var(--sr-blue);
+      border-right: 2px solid var(--sr-blue);
+      transform: translateY(-50%) rotate(45deg);
+      background: #ffffff;
+    }
+
+    .pipeline-block .tag {
+      margin-bottom: 0.75rem;
+    }
+
+    .results-table {
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid var(--sr-border);
+      background: #ffffff;
+      box-shadow: 0 10px 28px rgba(36, 60, 110, 0.06);
+    }
+
+    .results-table table {
+      margin-bottom: 0;
+    }
+
+    .results-table th {
+      white-space: nowrap;
+      background: var(--sr-soft);
+    }
+
+    .best {
+      color: var(--sr-blue);
+      font-weight: 800;
+    }
+
+    .todo-note {
+      padding: 0.75rem 1rem;
+      border-left: 4px solid var(--sr-cyan);
+      border-radius: 8px;
+      background: rgba(17, 167, 180, 0.08);
+      color: var(--sr-muted);
+      font-size: 0.95rem;
+    }
+
+    .bibtex-box {
+      background: #1f2430;
+      color: #eef3ff;
+      border-radius: 14px;
+      padding: 1.2rem;
+      overflow-x: auto;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 900px) {
+      .pipeline {
+        grid-template-columns: 1fr;
+      }
+
+      .pipeline-block:not(:last-child)::after {
+        display: none;
+      }
+
+      .visual-placeholder {
+        min-height: 240px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<section class="hero is-sr">
+  <div class="hero-body">
+    <div class="container is-max-desktop has-text-centered">
+      <div class="venue-tag">
+        <span class="icon"><i class="fas fa-cube"></i></span>
+        <span>NeurIPS 2026 Submission</span>
+      </div>
+      <h1 class="title is-1 publication-title">Reinforcing Dual-Path Reasoning in Spatial Vision Language Models</h1>
+
+      <div class="is-size-5 publication-authors mt-4">
+        <span class="author-block">Yatai Ji<sup>1</sup>,</span>
+        <span class="author-block">An-Chieh Cheng<sup>2</sup>,</span>
+        <span class="author-block">Yang Fu<sup>2</sup>,</span>
+        <span class="author-block">Yukang Chen<sup>3</sup>,</span>
+        <span class="author-block">Han Zhang<sup>3</sup>,</span>
+        <span class="author-block">Zhaojing Yang<sup>2</sup>,</span>
+        <span class="author-block">Wei Huang<sup>1</sup>,</span>
+        <span class="author-block">Ka Chun Cheung<sup>3</sup>,</span>
+        <span class="author-block">Song Han<sup>3</sup>,</span>
+        <span class="author-block">Vidya Nariyambut Murali<sup>3</sup>,</span>
+        <span class="author-block">Pavlo Molchanov<sup>3</sup>,</span>
+        <span class="author-block">Jan Kautz<sup>3</sup>,</span>
+        <span class="author-block">Simon See<sup>3</sup>,</span>
+        <span class="author-block">Hongxu Yin<sup>3</sup>,</span>
+        <span class="author-block">Ping Luo<sup>1</sup>,</span>
+        <span class="author-block">Sifei Liu<sup>3</sup></span>
+      </div>
+
+      <div class="is-size-5 publication-authors mt-2">
+        <span class="author-block"><sup>1</sup>The University of Hong Kong</span>
+        <span class="author-block"><sup>2</sup>UC San Diego</span>
+        <span class="author-block"><sup>3</sup>NVIDIA</span>
+      </div>
+
+      <div class="publication-links">
+        <span class="link-block">
+          <a href="#" class="external-link button is-normal is-rounded is-dark">
+            <span class="icon"><i class="fas fa-file-pdf"></i></span>
+            <span>Paper Coming Soon</span>
+          </a>
+        </span>
+        <span class="link-block">
+          <a href="#" class="external-link button is-normal is-rounded is-dark">
+            <span class="icon"><i class="fab fa-github"></i></span>
+            <span>Code Coming Soon</span>
+          </a>
+        </span>
+        <span class="link-block">
+          <a href="#" class="external-link button is-normal is-rounded is-dark">
+            <span class="icon"><i class="fas fa-database"></i></span>
+            <span>Data Coming Soon</span>
+          </a>
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section pt-5">
+  <div class="container is-max-desktop">
+    <div class="visual-card">
+      <div class="visual-placeholder">
+        <div>
+          <strong>Teaser Figure Placeholder</strong>
+          Replace with <code>static/images/sr-real-teaser.png</code>: a spatial imagination query comparing prior models, LOR, and DTR.
+        </div>
+      </div>
+      <div class="visual-caption">
+        <span class="method-name">SR-ReaL</span> solves spatial reasoning through two complementary paths: Language-Only Reasoning (LOR) for step-by-step linguistic deduction, and Detect-Then-Reason (DTR) for explicit 3D grounding followed by geometric inference.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Spatial VLMs have made substantial progress in geometric perception, yet complex spatial reasoning, requiring multi-step inference over depth, distance, and scene relations, remains challenging. Moreover, different spatial queries call for fundamentally different strategies: some are best addressed through purely linguistic, step-by-step deduction, while others require explicit 3D grounding before quantitative inference. We present <strong>Dual-Path Spatial Reasoning via Reinforcement Learning for Spatial VLMs</strong> (<span class="method-name">SR-ReaL</span>), a unified framework that equips a spatial VLM with two complementary reasoning paths: <strong>Language-Only Reasoning</strong> (LOR), which performs step-by-step linguistic deduction, and <strong>Detect-Then-Reason</strong> (DTR), which detects 3D geometric cues (e.g., centers or bounding boxes) via region tokens before explicit geometric inference. 
+          </p>
+          <p>
+            <span class="method-name">SR-ReaL</span> starts with cold-start supervised fine-tuning that constructs LOR and DTR chain-of-thought supervision and exposes a region-to-3D interface. It then applies reinforcement learning with accuracy and format rewards; for DTR, a discrete center-based detection reward further improves geometric alignment. Across diverse spatial benchmarks, one RL-trained model supports both paths, achieves strong gains over spatial VLM baselines, and generalizes across datasets without per-task tuning.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="section-heading">
+      <h2 class="title is-3">Key Ideas</h2>
+      <p>SR-ReaL studies how reinforcement learning should shape spatial reasoning with the rich geometric perception provided by spatial VLMs.</p>
+    </div>
+
+    <div class="columns">
+      <div class="column">
+        <div class="insight-card">
+          <div class="icon-badge"><i class="fas fa-route"></i></div>
+          <h3 class="title is-5">Dual Reasoning Paths</h3>
+          <p>A single spatial VLM supports both LOR for general spatial deduction and DTR for region-aware tasks that benefit from explicit 3D coordinates.</p>
+        </div>
+      </div>
+      <div class="column">
+        <div class="insight-card">
+          <div class="icon-badge"><i class="fas fa-crosshairs"></i></div>
+          <h3 class="title is-5">Region-to-3D Grounding</h3>
+          <p>Region tokens bridge 2D references and 3D quantities, allowing DTR to predict object centers or boxes before computing distances and relations.</p>
+        </div>
+      </div>
+      <div class="column">
+        <div class="insight-card">
+          <div class="icon-badge"><i class="fas fa-chart-line"></i></div>
+          <h3 class="title is-5">RL for Generalization</h3>
+          <p>Cold-start supervision stabilizes reasoning traces, while RL with structured rewards improves both benchmark accuracy and cross-domain transfer.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="section-heading">
+      <h2 class="title is-3">Two Complementary Reasoning Paths</h2>
+      <p>Different spatial queries call for different strategies. SR-ReaL makes both available in the same checkpoint.</p>
+    </div>
+
+    <div class="columns">
+      <div class="column">
+        <div class="path-panel is-lor">
+          <h3 class="title is-4">Language-Only Reasoning (LOR)</h3>
+          <p class="has-text-grey">Best suited for global scene reasoning and questions that can be solved through relational deduction.</p>
+          <div class="path-step"><span>1</span><p>Observe visual and textual spatial relations.</p></div>
+          <div class="path-step"><span>2</span><p>Chain relations through concise step-by-step reasoning.</p></div>
+          <div class="path-step"><span>3</span><p>Select or generate the final answer without explicit detection.</p></div>
+        </div>
+      </div>
+      <div class="column">
+        <div class="path-panel is-dtr">
+          <h3 class="title is-4">Detect-Then-Reason (DTR)</h3>
+          <p class="has-text-grey">Best suited for region-grounded and metric-sensitive questions involving depth, distance, or precise localization.</p>
+          <div class="path-step"><span>1</span><p>Use region tokens to ground referenced objects.</p></div>
+          <div class="path-step"><span>2</span><p>Predict 3D centers or boxes for the relevant regions.</p></div>
+          <div class="path-step"><span>3</span><p>Compute geometric relations and derive the answer explicitly.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="section-heading">
+      <h2 class="title is-3">Training Pipeline</h2>
+      <p>SR-ReaL combines structured cold-start data with reinforcement learning rewards that supervise answer correctness, output format, and DTR localization.</p>
+    </div>
+
+    <div class="pipeline">
+      <div class="pipeline-block">
+        <span class="tag is-link is-light">Foundation</span>
+        <h3 class="title is-5">Spatial VLM</h3>
+        <p>Built on an SR-3D-style model with text, image, and region tokens plus 3D-aware visual embeddings.</p>
+      </div>
+      <div class="pipeline-block">
+        <span class="tag is-info is-light">Cold-Start</span>
+        <h3 class="title is-5">LOR/DTR CoT</h3>
+        <p>Construct language-only and geometry-grounded reasoning traces, then filter for answer and rationale consistency.</p>
+      </div>
+      <div class="pipeline-block">
+        <span class="tag is-primary is-light">Blended SFT</span>
+        <h3 class="title is-5">Grounding + QA</h3>
+        <p>Mix 2D/3D grounding, region-prompted spatial QA, and general multimodal data to preserve broad capability.</p>
+      </div>
+      <div class="pipeline-block">
+        <span class="tag is-success is-light">RL</span>
+        <h3 class="title is-5">Structured Rewards</h3>
+        <p>Optimize with accuracy and format rewards, plus a discrete detection reward for DTR 3D alignment.</p>
+      </div>
+    </div>
+
+    <div class="visual-card mt-5">
+      <div class="visual-placeholder">
+        <div>
+          <strong>Method Figure Placeholder</strong>
+          Replace with <code>static/images/sr-real-method.png</code>: cold-start data construction, region-to-3D interface, and RL reward design.
+        </div>
+      </div>
+      <div class="visual-caption">
+        Suggested visual: show the upper LOR branch producing <code>&lt;think&gt;...&lt;/think&gt;&lt;answer&gt;...&lt;/answer&gt;</code>, and the lower DTR branch producing <code>&lt;detect&gt;...&lt;/detect&gt;&lt;think&gt;...&lt;/think&gt;&lt;answer&gt;...&lt;/answer&gt;</code>.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="section-heading">
+      <h2 class="title is-3">Main Results</h2>
+      <p>One SR-ReaL checkpoint supports both inference paths and improves over the SR-3D spatial VLM baseline.</p>
+    </div>
+
+    <div class="results-table">
+      <table class="table is-fullwidth is-hoverable">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>SPAR Low</th>
+            <th>SPAR Medium</th>
+            <th>SPAR High</th>
+            <th>SPAR Avg.</th>
+            <th>EmbSpatial</th>
+            <th>SAT</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>SR-3D (Base)</td>
+            <td>24.1</td>
+            <td>37.6</td>
+            <td>40.1</td>
+            <td>33.4</td>
+            <td>72.5</td>
+            <td>63.0</td>
+          </tr>
+          <tr>
+            <td><strong>Ours-LOR</strong></td>
+            <td>58.5</td>
+            <td class="best">47.7</td>
+            <td>67.3</td>
+            <td>60.5</td>
+            <td>79.2</td>
+            <td class="best">68.7</td>
+          </tr>
+          <tr>
+            <td><strong>Ours-DTR</strong></td>
+            <td class="best">61.1</td>
+            <td>46.9</td>
+            <td class="best">68.3</td>
+            <td class="best">61.9</td>
+            <td class="best">81.3</td>
+            <td>-</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="columns mt-5">
+      <div class="column">
+        <div class="insight-card">
+          <h3 class="title is-5">+28.5 on SPAR Avg.</h3>
+          <p>Ours-DTR improves SPAR-Bench average accuracy from 33.4 to 61.9 over SR-3D.</p>
+        </div>
+      </div>
+      <div class="column">
+        <div class="insight-card">
+          <h3 class="title is-5">81.3 on EmbSpatial</h3>
+          <p>Explicit region-to-3D grounding helps embodied positional reasoning.</p>
+        </div>
+      </div>
+      <div class="column">
+        <div class="insight-card">
+          <h3 class="title is-5">68.7 on SAT</h3>
+          <p>LOR improves global spatial reasoning when no region prompts are available.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="section-heading">
+      <h2 class="title is-3">Qualitative Examples</h2>
+      <p>These slots are intentionally left as visual placeholders so you can add the best paper examples later.</p>
+    </div>
+
+    <div class="columns">
+      <div class="column">
+        <div class="visual-card">
+          <div class="visual-placeholder">
+            <div>
+              <strong>Example 1: Spatial Relation</strong>
+              Replace with <code>static/images/example-relation.png</code>.
+            </div>
+          </div>
+          <div class="visual-caption">
+            Suggested content: compare LOR and DTR on a relation question where both paths reach the correct answer, highlighting complementary reasoning traces.
+          </div>
+        </div>
+      </div>
+      <div class="column">
+        <div class="visual-card">
+          <div class="visual-placeholder">
+            <div>
+              <strong>Example 2: Multi-View Distance</strong>
+              Replace with <code>static/images/example-distance.png</code>.
+            </div>
+          </div>
+          <div class="visual-caption">
+            Suggested content: show DTR aligning objects into one reference frame, localizing 3D centers, and computing distance more accurately than LOR.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="todo-note mt-5">
+      Optional extra visual: add a third example for complex navigation, object manipulation, or layout reasoning from the CA-1M/NuScenes-generated tasks.
+    </div>
+  </div>
+</section>
+
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="section-heading">
+      <h2 class="title is-3">What We Learn</h2>
+      <p>SR-ReaL offers a practical view of when explicit geometry helps and how RL should be initialized for spatial VLM reasoning.</p>
+    </div>
+
+    <div class="columns">
+      <div class="column">
+        <div class="insight-card">
+          <h3 class="title is-5">DTR excels with regions</h3>
+          <p>When region references are available, detecting 3D cues before reasoning improves quantitative spatial tasks such as depth and distance.</p>
+        </div>
+      </div>
+      <div class="column">
+        <div class="insight-card">
+          <h3 class="title is-5">LOR remains broadly useful</h3>
+          <p>Language-only reasoning strengthens global spatial QA and applies when explicit region prompts or 3D detections are unavailable.</p>
+        </div>
+      </div>
+      <div class="column">
+        <div class="insight-card">
+          <h3 class="title is-5">Joint training helps both</h3>
+          <p>LOR and DTR reinforce each other: linguistic reasoning regularizes DTR while geometry-aware training enriches spatial representations.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Citation</h2>
+    <pre class="bibtex-box"><code>@article{ji2026srreal,
+  title   = {Reinforcing Dual-Path Reasoning in Spatial Vision Language Models},
+  author  = {Ji, Yatai and Cheng, An-Chieh and Fu, Yang and Chen, Yukang and Zhang, Han and Yang, Zhaojing and Huang, Wei and Cheung, Ka Chun and Han, Song and Murali, Vidya Nariyambut and Molchanov, Pavlo and Kautz, Jan and See, Simon and Yin, Hongxu and Luo, Ping and Liu, Sifei},
+  journal = {arXiv preprint},
+  year    = {2026}
+}</code></pre>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <p>
+        Website template adapted from the academic project page template. Please update paper/code/data links and replace placeholder images before release.
+      </p>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -56,1045 +715,6 @@
 <body>
 
 
-<section class="section hero">
-  <div class="hero-body">
-    <div class="container is-max-desktop">
-      <div class="columns is-centered">
-        <div class="column has-text-centered">
-          <h1 class="title is-1 publication-title">From Denoising to Refining: A Corrective Framework for Vision-Language Diffusion Model</h1>
-          
-          <!-- 图标添加在这里 -->
-          <!-- <div style="margin: 20px 0;">
-            <img src="static/images/logo.png" alt="Fudoki Logo" style="height: 120px;">
-          </div> -->
-          
-          <div class="is-size-5 publication-authors authors-list">
-            <span class="author-block">Yatai Ji<sup>1</sup>, </span>
-            <span class="author-block">Teng Wang<sup>2</sup>, </span>
-            <span class="author-block">Yuying Ge<sup>2</sup>, </span>
-            <span class="author-block">Zhiheng Liu<sup>1</sup>, </span>
-            <span class="author-block">Sidi Yang<sup>1</sup>, </span>
-            <span class="author-block">Ying Shan<sup>2</sup>, </span>
-            <span class="author-block">Ping Luo<sup>1</sup></span>
-          </div>
-
-          <div class="is-size-5 publication-authors affiliations-list">
-            <span class="author-block"><sup>1</sup>The University of Hong Kong</span>
-            <span class="author-block"><sup>2</sup>Tencent ARC Lab</span>
-          </div>
-
-          <div class="publication-links has-text-centered">
-            <!-- Arxiv PDF link -->
-            <span class="link-block">
-              <a href="https://arxiv.org/pdf/2510.19871" target="_blank"
-              class="external-link button is-normal is-rounded is-dark">
-              <span class="icon">
-                <i class="fas fa-file-pdf"></i>
-              </span>
-              <span>Paper</span>
-            </a>
-            </span>
-
-            <!-- ArXiv abstract Link -->
-              <span class="link-block">
-                <a href="https://arxiv.org/abs/2510.19871" target="_blank"
-                class="external-link button is-normal is-rounded is-dark">
-                <span class="icon">
-                  <i class="ai ai-arxiv"></i>
-                </span>
-                <span>arXiv</span>
-              </a>
-            </span>
-
-            <span class="link-block">
-                <a href="https://huggingface.co/jiyatai/ReDiff"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <!-- <i class="far fa-images"></i> -->
-                      <p style="font-size:18px">🤗</p>
-                      <!-- 🔗 -->
-                  </span>
-                  <span>Model</span>
-                </a>
-              </span>
-              <span class="link-block">
-                <a href="https://github.com/jiyt17/ReDiff"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="fab fa-github"></i>
-                  </span>
-                  <span>Code</span>
-                  </a>
-              </span>
-          </div>
-
-          <style>
-          .equal-contrib {
-            text-align: center;
-            font-size: 1.15em;        /* 字号更大 */
-            color: #444;              /* 更深的灰色 */
-            font-weight: bold;        /* 加粗 */
-            margin-top: 0.8em;
-            letter-spacing: 0.02em;   /* 微微拉开字间距 */
-          }
-          .publication-authors {
-            text-align: center;
-            color: #666;
-            font-family: 'Roboto', 'Arial', sans-serif;
-          }
-
-          .authors-list, .affiliations-list {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 0.2em;
-            margin-bottom: 0.5em;
-          }
-
-          .author-block {
-            margin-bottom: 0.15em;
-            font-size: 1em;
-          }
-
-          .affiliations-list .author-block {
-            font-size: 0.95em;
-            margin: 0 0.6em;
-          }
-          </style>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- Teaser video-->
-
-<!-- End teaser video -->
-
-<!-- Paper abstract -->
-<section class="section hero is-light">
-  <div class="container is-max-desktop">
-    <div class="columns is-centered has-text-centered">
-      <div class="column is-four-fifths">
-        <h2 class="title is-3">Abstract</h2>
-        <div class="content has-text-justified">
-          <p>
-          Discrete diffusion models have emerged as a promising direction for vision-language tasks, offering bidirectional context modeling and theoretical parallelization. However, their practical application is severely hindered by a train-inference discrepancy, which leads to catastrophic error cascades: initial token errors during parallel decoding pollute the generation context, triggering a chain reaction of compounding errors and leading to syntactic errors and semantic hallucinations. To address this fundamental challenge, we reframe the generation process from passive denoising to active refining. We introduce <strong>ReDiff</strong>, a refining-enhanced diffusion framework that teaches the model to identify and correct its own errors. Our approach features a two-stage training process: first, we instill a foundational revision capability by training the model to revise synthetic errors; second, we implement a novel online self-correction loop where the model is explicitly trained to revise its own flawed drafts by learning from an expert's corrections. This mistake-driven learning endows the model with the crucial ability to revisit and refine its already generated output, effectively breaking the error cascade. Extensive experiments demonstrate that ReDiff significantly improves the coherence and factual accuracy of generated content, enabling stable and efficient parallel generation far superior to traditional denoising methods.
-          </p>
-          <figure class="image">
-            <img src="static/images/teaser.jpg" alt="Introduction" style="width: 100%; max-width: 700px; height: auto;">
-          </figure>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-<!-- End paper abstract -->
-
-
-<section class="section hero">
-  <div class="container is-max-desktop">
-    <div class="has-text-centered">
-      <h2 class="title is-3">💡 ReDiff</h2>
-      <div class="hero-body">
-        <figure class="image">
-          <img src="static/images/rediff.jpg" alt="Method" style="width: 100%; max-width: 800px; height: auto;">
-        </figure>
-        <p class="results-description" style="line-height: 1.6; margin-bottom: 1em;">
-          <strong>(a)</strong> Observations of existing vision-language diffusion models, especially in few-step generation scenarios, reveal two predominant error types: <strong>syntactic chaos</strong> (e.g., incoherence, repetition, grammatical errors) and <strong>semantic hallucinations</strong> (content that contradicts the visual input).
-        </p>
-        <p class="results-description" style="line-height: 1.6; margin-bottom: 1em;">
-          <strong>(b)</strong> In the <strong>foundational revision training</strong> stage, we instill a general corrective capability by training a base model (ReDiff-Base) to revise two types of <strong>synthetic errors</strong> that are intentionally injected into ground-truth captions.
-        </p>
-        <p class="results-description" style="line-height: 1.6;">
-          <strong>(c)</strong> For the second stage, i.e., <strong>online self-correction learning</strong>, the model generates its own flawed "drafts". These drafts, containing the model's grammatical and hallucinatory errors, are then revised by an expert AI assistant. The resulting ``draft-refined pairs" provide strong supervision, teaching our final model (ReDiff) to identify and correct its own <strong>intrinsic mistakes</strong>, thus breaking the error cascade.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<style>
-  .teaser-image {
-    max-width: 95%;
-    height: auto;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 20px;
-  }
-  
-  .results-description {
-    text-align: left;
-    line-height: 1.6;
-    margin: 0 auto;
-    max-width: 90%;
-    color: #333;
-    font-size: 0.95rem;
-  }
-  
-  @media (max-width: 768px) {
-    .results-description {
-      font-size: 0.9rem;
-      text-align: center;
-    }
-  }
-</style>
-
-<section class="section hero is-light animation-showcase">
-  <div class="container is-max-desktop">
-    <h2 class="title is-3 has-text-centered">🖼️ Cases Comparison</h2>
-    
-    <!-- Carousel with Navigation Arrows -->
-    <div class="comparison-carousel-container">
-      <button class="comparison-nav-arrow comparison-prev" onclick="moveComparisonCarousel(-1)">
-        <span class="icon">
-          <i class="fas fa-chevron-left"></i>
-        </span>
-      </button>
-      
-      <div id="comparison-carousel" class="simple-carousel">
-        <div class="comparison-carousel-track">
-          <div class="comparison-carousel-item active">
-            <img src="static/images/vis1.jpg" alt="Generation Comparison 1"/>
-            <div class="image-caption">
-              <p>inference speed: 4 tokens/step</p>
-            </div>
-          </div>
-          <div class="comparison-carousel-item">
-            <img src="static/images/vis5.jpg" alt="Generation Comparison 2"/>
-            <div class="image-caption">
-              <p>inference speed: 8 tokens/step</p>
-            </div>
-          </div>
-          <div class="comparison-carousel-item">
-            <img src="static/images/vis6.jpg" alt="Generation Comparison 2"/>
-            <div class="image-caption">
-              <p>inference speed: 2 tokens/step</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <button class="comparison-nav-arrow comparison-next" onclick="moveComparisonCarousel(1)">
-        <span class="icon">
-          <i class="fas fa-chevron-right"></i>
-        </span>
-      </button>
-    </div>
-    
-    <!-- Dot Navigation -->
-    <div class="comparison-carousel-navigation">
-      <div class="comparison-nav-dots">
-        <span class="comparison-dot active" onclick="jumpToComparisonSlide(0)"></span>
-        <span class="comparison-dot" onclick="jumpToComparisonSlide(1)"></span>
-        <span class="comparison-dot" onclick="jumpToComparisonSlide(2)"></span>
-      </div>
-    </div>
-    
-    <!-- Description paragraph at the bottom of the section -->
-    <div class="content model-description-container">
-      <p class="results-description">
-        Comparison of the parallel-generated captions from ReDiff and LLaDA-V. 
-        When generating multiple tokens each step, the baseline's output suffers from token repetition, grammatical errors, and semantic hallucinations. This occurs because an initial chaos or hallucination can affect subsequent generation, leading to error cascades.
-        In contrast, our model's output is fluent, coherent, and factually grounded. Because ReDiff has the ability to revisit and refine its own outputs.
-      </p>
-    </div>
-  </div>
-</section>
-
-<style>
-  /* Container for carousel with arrows */
-  .comparison-carousel-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-    width: 100%;
-  }
-  
-  /* Unique styling for comparison carousel */
-  #comparison-carousel {
-    width: 90%; /* Carousel width 90% of container */
-    position: relative;
-    overflow: hidden;
-    margin: 0 auto;
-    border-radius: 6px;
-  }
-  
-  .comparison-carousel-track {
-    display: flex;
-    transition: transform 0.5s ease-in-out;
-    width: 300%; /* 100% × number of slides (3) */
-  }
-  
-  .comparison-carousel-item {
-    width: 33.333%; /* 100% ÷ number of slides (3) - 修复了这里 */
-    flex: 0 0 33.333%; /* 修复了这里 */
-    text-align: center;
-    opacity: 0; /* 修复：非活动图片完全隐藏 */
-    transition: opacity 0.5s ease;
-    padding: 0 10px;
-    box-sizing: border-box;
-    position: relative;
-  }
-  
-  .comparison-carousel-item.active {
-    opacity: 1; /* 修复：只有活动图片完全显示 */
-  }
-  
-  /* Image styling - control dimensions */
-  .comparison-carousel-item img {
-    width: 100%;
-    height: auto;
-    object-fit: contain; /* 改为contain保持完整比例 */
-    max-height: 600px; /* 稍微降低最大高度 */
-    display: block;
-    margin: 0 auto;
-  }
-
-  .image-caption {
-    margin: 15px 0 0 0;
-    font-size: 14px;
-    color: #666;
-    text-align: center;
-    font-style: italic;
-    font-weight: 500;
-  }
-  
-  /* Description styling */
-  .model-description-container {
-    margin-top: 30px;
-    padding: 0 10px;
-  }
-  
-  .model-comparison-description {
-    text-align: left;
-    line-height: 1.6;
-    margin: 0 auto;
-    max-width: 90%;
-    font-size: 0.95rem;
-    color: #333;
-  }
-  
-  /* Navigation Arrows */
-  .comparison-nav-arrow {
-    background-color: rgba(0,0,0,0.2);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    position: absolute;
-    z-index: 10;
-  }
-  
-  .comparison-nav-arrow:hover {
-    background-color: rgba(0,0,0,0.5);
-    transform: scale(1.1);
-  }
-  
-  .comparison-prev {
-    left: 2%; /* 稍微调整位置 */
-  }
-  
-  .comparison-next {
-    right: 2%; /* 稍微调整位置 */
-  }
-  
-  /* Dot Navigation */
-  .comparison-carousel-navigation {
-    display: flex;
-    justify-content: center;
-    margin: 20px 0;
-  }
-  
-  .comparison-nav-dots {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-  }
-  
-  .comparison-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: #dbdbdb;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-  }
-  
-  .comparison-dot:hover {
-    background-color: #b5b5b5;
-  }
-  
-  .comparison-dot.active {
-    background-color: #4a4a4a;
-    transform: scale(1.2);
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .comparison-nav-arrow {
-      width: 36px;
-      height: 36px;
-    }
-    
-    .comparison-dot {
-      width: 10px;
-      height: 10px;
-    }
-    
-    .comparison-nav-dots {
-      gap: 10px;
-    }
-    
-    .comparison-carousel-item img {
-      max-height: 350px; /* Smaller max height on mobile */
-    }
-    
-    .model-comparison-description {
-      font-size: 0.85rem;
-    }
-    
-    .comparison-prev {
-      left: 1%;
-    }
-    
-    .comparison-next {
-      right: 1%;
-    }
-  }
-</style>
-
-<script>
-  // Smooth carousel functionality for comparison section
-  document.addEventListener('DOMContentLoaded', function() {
-    let comparisonCurrentSlide = 0;
-    const comparisonSlides = document.querySelectorAll('.comparison-carousel-item');
-    const comparisonDots = document.querySelectorAll('.comparison-dot');
-    const comparisonTrack = document.querySelector('.comparison-carousel-track');
-    let comparisonAutoplayInterval = null;
-    let isComparisonAnimating = false;
-    
-    // Show the current slide with smooth transition
-    function showComparisonSlide() {
-      if (isComparisonAnimating) return;
-      isComparisonAnimating = true;
-      
-      // Move track to position (percentage based on current slide)
-      const slidePercentage = comparisonCurrentSlide * (100 / comparisonSlides.length);
-      comparisonTrack.style.transform = `translateX(-${slidePercentage}%)`;
-      
-      // Update active state for slides
-      comparisonSlides.forEach((slide, index) => {
-        if (index === comparisonCurrentSlide) {
-          slide.classList.add('active');
-        } else {
-          slide.classList.remove('active');
-        }
-      });
-      
-      // Update dots
-      comparisonDots.forEach((dot, index) => {
-        if (index === comparisonCurrentSlide) {
-          dot.classList.add('active');
-        } else {
-          dot.classList.remove('active');
-        }
-      });
-      
-      // Allow next animation after transition completes
-      setTimeout(() => {
-        isComparisonAnimating = false;
-      }, 500);
-    }
-    
-    // Global function to jump to a specific slide
-    window.jumpToComparisonSlide = function(index) {
-      if (index !== comparisonCurrentSlide && !isComparisonAnimating) {
-        comparisonCurrentSlide = index;
-        showComparisonSlide();
-        resetComparisonAutoplay();
-      }
-    }
-    
-    // Function to move carousel
-    window.moveComparisonCarousel = function(direction) {
-      if (isComparisonAnimating) return;
-      
-      comparisonCurrentSlide = (comparisonCurrentSlide + direction + comparisonSlides.length) % comparisonSlides.length;
-      showComparisonSlide();
-      resetComparisonAutoplay();
-    }
-    
-    // Function to start autoplay
-    function startComparisonAutoplay() {
-      // Clear any existing interval first
-      if (comparisonAutoplayInterval) {
-        clearInterval(comparisonAutoplayInterval);
-      }
-      
-      // Set new interval
-      comparisonAutoplayInterval = setInterval(function() {
-        if (!isComparisonAnimating) {
-          moveComparisonCarousel(1);
-        }
-      }, 8000);
-    }
-    
-    // Function to reset autoplay timer
-    function resetComparisonAutoplay() {
-      if (comparisonAutoplayInterval) {
-        clearInterval(comparisonAutoplayInterval);
-        startComparisonAutoplay();
-      }
-    }
-    
-    // Initialize the carousel - 确保只有第一张显示
-    comparisonSlides.forEach((slide, index) => {
-      if (index === 0) {
-        slide.classList.add('active');
-      } else {
-        slide.classList.remove('active');
-      }
-    });
-    comparisonDots[0].classList.add('active');
-    
-    // 初始位置设置
-    comparisonTrack.style.transform = 'translateX(0%)';
-    
-    // Start autoplay
-    startComparisonAutoplay();
-    
-    // Pause autoplay on hover
-    const carousel = document.getElementById('comparison-carousel');
-    if (carousel) {
-      carousel.addEventListener('mouseenter', function() {
-        clearInterval(comparisonAutoplayInterval);
-        comparisonAutoplayInterval = null;
-      });
-      
-      carousel.addEventListener('mouseleave', function() {
-        startComparisonAutoplay();
-      });
-    }
-    
-    // Handle touch events for mobile swipe
-    let touchStartX = 0;
-    let touchEndX = 0;
-    
-    if (carousel) {
-      carousel.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
-      });
-      
-      carousel.addEventListener('touchend', e => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleComparisonSwipe();
-      });
-    }
-    
-    function handleComparisonSwipe() {
-      // Detect swipe direction with a threshold of 50px
-      if (touchEndX < touchStartX - 50) {
-        moveComparisonCarousel(1);
-      } else if (touchEndX > touchStartX + 50) {
-        moveComparisonCarousel(-1);
-      }
-    }
-  });
-</script>
-
-
-<!-- Simplified Animation Showcase with Smooth Transitions -->
-<section class="section hero animation-showcase">
-  <div class="container is-max-desktop">
-    <h2 class="title is-3 has-text-centered">🔄 Refinement Process</h2>
-    
-    <!-- Carousel with Navigation Arrows -->
-    <div class="understanding-carousel-container">
-      <button class="understanding-nav-arrow understanding-prev" onclick="moveUnderstandingCarousel(-1)">
-        <span class="icon">
-          <i class="fas fa-chevron-left"></i>
-        </span>
-      </button>
-      
-      <div id="understanding-carousel" class="simple-carousel">
-        <div class="understanding-carousel-track">
-          <div class="understanding-carousel-item active">
-            <img src="static/images/refine1.gif" alt="Animation 1"/>
-          </div>
-          <div class="understanding-carousel-item">
-            <img src="static/images/refine2.gif" alt="Animation 2"/>
-          </div>
-        </div>
-      </div>
-      
-      <button class="understanding-nav-arrow understanding-next" onclick="moveUnderstandingCarousel(1)">
-        <span class="icon">
-          <i class="fas fa-chevron-right"></i>
-        </span>
-      </button>
-    </div>
-    
-    <!-- Dot Navigation -->
-    <div class="understanding-carousel-navigation">
-      <div class="understanding-nav-dots">
-        <span class="understanding-dot active" onclick="jumpToUnderstandingSlide(0)"></span>
-        <span class="understanding-dot" onclick="jumpToUnderstandingSlide(1)"></span>
-      </div>
-    </div>
-      <style>
-  .token-red {
-    border: 2px solid #CB4335;
-    padding: 2px 6px;
-    border-radius: 6px;
-    margin: 0 2px;
-    font-weight: bold;
-  }
-  .token-yellow {
-    border: 2px dashed #FF8C00;
-    padding: 2px 6px;
-    border-radius: 6px;
-    margin: 0 2px;
-    font-weight: bold;
-  }
-  .token-light-red {
-      background-color: #ffcccc;
-      color: #c0392b;
-      padding: 4px 8px;
-      border-radius: 4px;
-      margin: 0 2px;
-      font-weight: bold;
-      display: inline-block;
-  }
-  .token-light-green {
-      background-color: #ccffcc;
-      color: #27ae60;
-      padding: 4px 8px;
-      border-radius: 4px;
-      margin: 0 2px;
-      font-weight: bold;
-      display: inline-block;
-  }
-    </style>
-      <p class="results-description">
-        <strong>32-step generation process:</strong> Our model can simultaneously unmask new tokens and refine previously generated ones.
-        (<span class="token-light-red"><strong>red background</strong></span> indicates intermediate errors in the generation process, while the <strong>refined token</strong> is marked with 
-        <span class="token-light-green"><strong>green background</strong></span>)
-      </p>
-  </div>
-</section>
-
-<style>
-  /* Container for carousel with arrows */
-  .understanding-carousel-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-    width: 100%;
-  }
-  
-  /* Unique styling for understanding carousel */
-  #understanding-carousel {
-    width: 95%; /* Carousel width 80% of container */
-    position: relative;
-    overflow: hidden;
-    margin: 0 auto;
-    border-radius: 6px;
-    /* box-shadow: 0 4px 10px rgba(0,0,0,0.1); */
-  }
-  
-  .understanding-carousel-track {
-    display: flex;
-    transition: transform 0.5s ease-in-out;
-    width: 200%; /* 100% × number of slides (6) */
-  }
-  
-  .understanding-carousel-item {
-    width: 50%; /* 100% ÷ number of slides (6) */
-    flex: 0 0 50%;
-    text-align: center;
-    opacity: 0.5;
-    transition: opacity 0.5s ease;
-    padding: 0 10px;
-    box-sizing: border-box;
-  }
-  
-  .understanding-carousel-item.active {
-    opacity: 1;
-  }
-  
-  /* Image styling - control dimensions */
-  .understanding-carousel-item img {
-    width: 100%;
-    height: auto;
-    object-fit: cover;
-    max-height: 800px; /* Set a reasonable max height */
-    display: block;
-    margin: 0 auto;
-  }
-  
-  /* Navigation Arrows */
-  .understanding-nav-arrow {
-    background-color: rgba(0,0,0,0.2);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    position: absolute;
-    z-index: 10;
-  }
-  
-  .understanding-nav-arrow:hover {
-    background-color: rgba(0,0,0,0.5);
-    transform: scale(1.1);
-  }
-  
-  .understanding-prev {
-    left: 5%;
-  }
-  
-  .understanding-next {
-    right: 5%;
-  }
-  
-  /* Dot Navigation */
-  .understanding-carousel-navigation {
-    display: flex;
-    justify-content: center;
-    margin: 20px 0;
-  }
-  
-  .understanding-nav-dots {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-  }
-  
-  .understanding-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: #dbdbdb;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-  }
-  
-  .understanding-dot:hover {
-    background-color: #b5b5b5;
-  }
-  
-  .understanding-dot.active {
-    background-color: #4a4a4a;
-    transform: scale(1.2);
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .understanding-nav-arrow {
-      width: 36px;
-      height: 36px;
-    }
-    
-    .understanding-dot {
-      width: 10px;
-      height: 10px;
-    }
-    
-    .understanding-nav-dots {
-      gap: 10px;
-    }
-    
-    .understanding-carousel-item img {
-      max-height: 400px; /* Smaller max height on mobile */
-    }
-  }
-</style>
-
-<script>
-  // Smooth carousel functionality for understanding section
-  document.addEventListener('DOMContentLoaded', function() {
-    let understandingCurrentSlide = 0;
-    const understandingSlides = document.querySelectorAll('.understanding-carousel-item');
-    const understandingDots = document.querySelectorAll('.understanding-dot');
-    const understandingTrack = document.querySelector('.understanding-carousel-track');
-    let understandingAutoplayInterval = null;
-    let isAnimating = false;
-    
-    // Show the current slide with smooth transition
-    function showUnderstandingSlide() {
-      if (isAnimating) return;
-      isAnimating = true;
-      
-      // Move track to position (percentage based on current slide)
-      const slidePercentage = understandingCurrentSlide * (100 / understandingSlides.length);
-      understandingTrack.style.transform = `translateX(-${slidePercentage}%)`;
-      
-      // Update active state for slides
-      understandingSlides.forEach((slide, index) => {
-        if (index === understandingCurrentSlide) {
-          slide.classList.add('active');
-        } else {
-          slide.classList.remove('active');
-        }
-      });
-      
-      // Update dots
-      understandingDots.forEach((dot, index) => {
-        if (index === understandingCurrentSlide) {
-          dot.classList.add('active');
-        } else {
-          dot.classList.remove('active');
-        }
-      });
-      
-      // Allow next animation after transition completes
-      setTimeout(() => {
-        isAnimating = false;
-      }, 500); // Match this with CSS transition duration
-    }
-    
-    // Global function to jump to a specific slide
-    window.jumpToUnderstandingSlide = function(index) {
-      if (index !== understandingCurrentSlide && !isAnimating) {
-        understandingCurrentSlide = index;
-        showUnderstandingSlide();
-        resetAutoplay(); // Reset autoplay timer when manually changing slides
-      }
-    }
-    
-    // Function to move carousel
-    window.moveUnderstandingCarousel = function(direction) {
-      if (isAnimating) return;
-      
-      understandingCurrentSlide = (understandingCurrentSlide + direction + understandingSlides.length) % understandingSlides.length;
-      showUnderstandingSlide();
-      resetAutoplay(); // Reset autoplay timer when manually changing slides
-    }
-    
-    // Function to start autoplay
-    function startAutoplay() {
-      // Clear any existing interval first
-      if (understandingAutoplayInterval) {
-        clearInterval(understandingAutoplayInterval);
-      }
-      
-      // Set new interval
-      understandingAutoplayInterval = setInterval(function() {
-        if (!isAnimating) {
-          moveUnderstandingCarousel(1); // Move to next slide
-        }
-      }, 37000); // Change slide every 34 seconds
-    }
-    
-    // Function to reset autoplay timer
-    function resetAutoplay() {
-      if (understandingAutoplayInterval) {
-        clearInterval(understandingAutoplayInterval);
-        startAutoplay();
-      }
-    }
-    
-    // Initialize the carousel
-    understandingSlides[0].classList.add('active');
-    understandingDots[0].classList.add('active');
-    
-    // Start autoplay
-    startAutoplay();
-    
-    // Pause autoplay on hover
-    const carousel = document.getElementById('understanding-carousel');
-    carousel.addEventListener('mouseenter', function() {
-      clearInterval(understandingAutoplayInterval);
-      understandingAutoplayInterval = null;
-    });
-    
-    carousel.addEventListener('mouseleave', function() {
-      startAutoplay();
-    });
-    
-    // Add keyboard navigation
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'ArrowLeft') {
-        moveUnderstandingCarousel(-1);
-      } else if (e.key === 'ArrowRight') {
-        moveUnderstandingCarousel(1);
-      }
-    });
-    
-    // Handle touch events for mobile swipe
-    let touchStartX = 0;
-    let touchEndX = 0;
-    
-    carousel.addEventListener('touchstart', e => {
-      touchStartX = e.changedTouches[0].screenX;
-    });
-    
-    carousel.addEventListener('touchend', e => {
-      touchEndX = e.changedTouches[0].screenX;
-      handleSwipe();
-    });
-    
-    function handleSwipe() {
-      // Detect swipe direction with a threshold of 50px
-      if (touchEndX < touchStartX - 50) {
-        moveUnderstandingCarousel(1); // Swipe left, go to next
-      } else if (touchEndX > touchStartX + 50) {
-        moveUnderstandingCarousel(-1); // Swipe right, go to previous
-      }
-    }
-  });
-</script>
-
-
-
-
-<section class="section hero is-light">
-  <div class="container is-max-desktop">
-    <div class="has-text-centered">
-      <h2 class="title is-3">👁️‍🗨️ More Results</h2>
-      <div class="hero-body">
-        <figure class="image">
-          <img src="static/images/vis4.jpg" alt="inference w/wo refine" style="width: 100%; max-width: 800px; height: auto;">
-        </figure>
-        <p class="results-description">
-          Comparison of inference with and without the refinement highlights that the refinement capability is critical for achieving high-quality outputs. 
-          If ReDiff inferences without the refinement, errors tend to accumulate, such as repeated words or symbols and incoherent sentences, ultimately degrading the quality of the caption.   
-        </p>
-        <br><br>
-        <figure class="image">
-          <img src="static/images/vis2.jpg" alt="revise wrong ans" style="width: 100%; max-width: 800px; height: auto;">
-        </figure>
-        <p class="results-description">
-          Beyond correcting the model's own errors during generation, ReDiff also demonstrates a powerful, generalizable ability to revise disturbing inputs. When we provide the model with an image and a user-provided caption containing either syntactic chaos or a factual hallucination, our model successfully corrects the initial erroneous text and proceeds to generate a coherent and accurate completion.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<style>
-  .teaser-image {
-    max-width: 80%;
-    height: auto;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 20px;
-  }
-  
-  .results-description {
-        margin-top: 10px;
-        font-size: 0.95rem;
-        line-height: 1.6;
-        text-align: left;
-        max-width: 800px;
-        margin-left: auto;
-        margin-right: auto;
-        padding: 20px;
-        background-color: #f9f9f9;
-        border-radius: 8px;
-        border-left: 4px solid #3498db;
-    }
-  
-  @media (max-width: 768px) {
-    .results-description {
-      font-size: 0.9rem;
-      text-align: center;
-    }
-  }
-</style>
-
-
-
-
-
-<!--BibTex citation -->
-<section class="section" id="BibTeX">
-  <div class="container is-max-desktop content">
-    <h2 class="title">BibTeX</h2>
-    <div style="position: relative;">
-      <pre><code id="bibtex-code">@article{ji2025denoising,
-  title={From Denoising to Refining: A Corrective Framework for Vision-Language Diffusion Model},
-  author={Ji, Yatai and Wang, Teng and Ge, Yuying and Liu, Zhiheng and Yang, Sidi and Shan, Ying and Luo, Ping},
-  journal={arXiv preprint arXiv:2510.19871},
-  year={2025}
-}</code></pre>
-      <button class="button is-small is-primary copy-btn" onclick="copyBibTeX()" style="position: absolute; top: 10px; right: 10px;">
-        <span class="icon is-small">
-          <i class="fas fa-copy"></i>
-        </span>
-        <span>Copy</span>
-      </button>
-    </div>
-  </div>
-</section>
-<!--End BibTex citation -->
-
-<script>
-function copyBibTeX() {
-  const bibtexCode = document.getElementById('bibtex-code').textContent;
-  navigator.clipboard.writeText(bibtexCode).then(function() {
-    // 临时改变按钮文字提示复制成功
-    const btn = document.querySelector('.copy-btn span:last-child');
-    const originalText = btn.textContent;
-    btn.textContent = 'Copied!';
-    setTimeout(() => {
-      btn.textContent = originalText;
-    }, 2000);
-  });
-}
-</script>
-
-<style>
-.copy-btn {
-  opacity: 0.8;
-  transition: opacity 0.3s;
-}
-.copy-btn:hover {
-  opacity: 1;
-}
-</style>
-
-
-
-
-
-
-  <footer class="footer">
-  <div class="container">
-    <div class="columns is-centered">
-      <div class="column is-8">
-        <div class="content">
-
-          <p>
-            This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a> which was adopted from the <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
-            You are free to borrow the source code of this website, we just ask that you link back to this page in the footer. <br> This website is licensed under a <a rel="license"  href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative
-            Commons Attribution-ShareAlike 4.0 International License</a>.
-          </p>
-
-        </div>
-      </div>
-    </div>
-  </div>
-</footer>
 
 <!-- Statcounter tracking code -->
   
