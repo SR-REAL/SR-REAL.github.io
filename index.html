@@ -125,6 +125,12 @@
       margin-bottom: 0.4rem;
     }
 
+    .visual-image {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
     .visual-caption {
       padding: 1rem 1.25rem;
       color: var(--sr-muted);
@@ -345,12 +351,7 @@
 <section class="section pt-5">
   <div class="container is-max-desktop">
     <div class="visual-card">
-      <div class="visual-placeholder">
-        <div>
-          <strong>Teaser Figure Placeholder</strong>
-          Replace with <code>static/images/sr-real-teaser.png</code>: a spatial imagination query comparing prior models, LOR, and DTR.
-        </div>
-      </div>
+      <img class="visual-image" src="static/images/sr-real-teaser.png" alt="SR-ReaL teaser figure">
       <div class="visual-caption">
         <span class="method-name">SR-ReaL</span> solves spatial reasoning through two complementary paths: Language-Only Reasoning (LOR) for step-by-step linguistic deduction, and Detect-Then-Reason (DTR) for explicit 3D grounding followed by geometric inference.
       </div>
@@ -470,12 +471,7 @@
     </div>
 
     <div class="visual-card mt-5">
-      <div class="visual-placeholder">
-        <div>
-          <strong>Method Figure Placeholder</strong>
-          Replace with <code>static/images/sr-real-method.png</code>: cold-start data construction, region-to-3D interface, and RL reward design.
-        </div>
-      </div>
+      <img class="visual-image" src="static/images/sr-real-method.png" alt="SR-ReaL method overview">
       <div class="visual-caption">
         Suggested visual: show the upper LOR branch producing <code>&lt;think&gt;...&lt;/think&gt;&lt;answer&gt;...&lt;/answer&gt;</code>, and the lower DTR branch producing <code>&lt;detect&gt;...&lt;/detect&gt;&lt;think&gt;...&lt;/think&gt;&lt;answer&gt;...&lt;/answer&gt;</code>.
       </div>
